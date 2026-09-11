@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>locco Mirror</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  
+  <!-- Local Offline-Ready Fonts & Icons Library -->
+  <!-- Remix Icon Library (Fast, Crisp & Offline-Ready) -->
+  <link rel="stylesheet" href="vendor/remixicon/remixicon.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="app-body">
+  
+  <!-- Top App Window Bar (Windows Drag & Window Controls) -->
+  <header class="window-titlebar" id="windowTitlebar">
+    <div class="window-drag-region">
+      <div class="app-brand">
+        <div class="brand-icon-wrapper">
+          <img src="logo.png" alt="loccoMirror" class="brand-icon-img">
+        </div>
+        <span class="brand-title">locco Mirror</span>
+      </div>
+      <div class="window-meta">
+        <span class="device-status-badge live" id="globalDeviceBadge">
+          <span class="status-pip"></span>
+          <span class="status-text">Detecting Device...</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Window Controls: Start Mirroring Buttons (With/Without USB Debugging) + User Auth + Window Actions -->
+    <div class="window-controls">
+      <!-- Start Mirroring with USB Debugging -->
+      <button class="btn btn-primary" id="btnToggleMirror" style="padding: 4px 11px; font-size: 11px; height: 28px; margin-right: 4px; gap: 5px; font-weight: 600; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 6px; box-shadow: 0 2px 8px rgba(16,185,129,0.35); cursor: pointer; display: inline-flex; align-items: center; white-space: nowrap;" title="Start Mirroring via ADB (with USB Debugging enabled)">
+        <i class="ri-play-circle-line" id="btnToggleMirrorIcon" style="font-size: 14px;"></i>
+        <span id="btnToggleMirrorText">Start Mirroring (with USB Debugging)</span>
+      </button>
+
+      <!-- Start Mirroring without USB Debugging (AOA Plug & Play) -->
+      <button class="btn btn-primary" id="btnConnectAoaTop" style="padding: 4px 11px; font-size: 11px; height: 28px; margin-right: 6px; gap: 5px; font-weight: 600; background: linear-gradient(135deg, #3b82f6, #6366f1); border: none; border-radius: 6px; box-shadow: 0 2px 8px rgba(99,102,241,0.35); cursor: pointer; display: inline-flex; align-items: center; white-space: nowrap;" title="Start Mirroring via AOA Direct (<5ms, without USB Debugging)">
+        <i class="ri-flashlight-line" id="btnAoaTopIcon" style="font-size: 14px;"></i>
+        <span id="btnAoaTopText">Start Mirroring (without USB Debugging)</span>
+      </button>
+
+      <!-- User Auth / Profile Dropdown -->
+      <div class="user-auth-wrapper" id="userAuthWrapper">
+        <button class="btn-auth-trigger" id="btnAuthTrigger" title="Sign In / Register Account">
+          <i class="auth-icon ri-account-circle-line" id="authBtnIcon"></i>
+          <span class="auth-btn-text" id="authBtnText">Sign In</span>
+          <span class="user-plan-tag hidden" id="userPlanTag">FREE</span>
+        </button>
+
+        <div class="user-profile-menu hidden" id="userProfileMenu">
+          <div class="profile-menu-header">
+            <div class="profile-avatar-box">
+              <img src="logo.png" alt="Avatar" class="profile-avatar-img" id="profileMenuAvatar">
+            </div>
+            <div class="profile-info-box">
+              <span class="profile-name" id="profileMenuName">loccoMirror User</span>
+              <span class="profile-email" id="profileMenuEmail">user@example.com</span>
+              <span class="profile-plan-badge" id="profileMenuPlan">Free Tier</span>
+            </div>
+          </div>
+          <div class="profile-menu-divider"></div>
+          <button class="profile-menu-item signout-item" id="btnSignOut">
+            <i class="ri-logout-box-r-line"></i>
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle Theme">
+        <i class="icon-sun ri-sun-line"></i>
+        <i class="icon-moon ri-moon-line"></i>
+      </button>
+      <button class="win-btn minimize-btn" id="winMinimize" title="Minimize" aria-label="Minimize">
+        <i class="ri-subtract-line"></i>
+      </button>
+      <button class="win-btn maximize-btn" id="winMaximize" title="Maximize" aria-label="Maximize">
+        <i class="ri-checkbox-blank-line"></i>
+      </button>
+      <button class="win-btn close-btn" id="winClose" title="Close" aria-label="Close">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    
+    <!-- Navigation Sidebar -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-nav-group">
+        <div class="sidebar-section-title">CONFIGURATIONS</div>
+        
+        <button class="nav-item active" data-page="video" id="nav-video">
+          <div class="nav-icon-container">
+            <i class="ri-vidicon-line"></i>
+          </div>
+          <div class="nav-text-container">
+            <span class="nav-label">Video Settings</span>
+            <span class="nav-desc">Resolution, FPS & Bitrate</span>
+          </div>
+          <span class="nav-active-bar"></span>
+        </button>
+
+        <button class="nav-item" data-page="general" id="nav-general">
+          <div class="nav-icon-container">
+            <i class="ri-equalizer-line"></i>
+          </div>
+          <div class="nav-text-container">
+            <span class="nav-label">General</span>
+            <span class="nav-desc">Language, System & Tray</span>
+          </div>
+          <span class="nav-active-bar"></span>
+        </button>
+
+        <button class="nav-item" data-page="recording" id="nav-recording">
+          <div class="nav-icon-container">
+            <i class="ri-record-circle-line"></i>
+          </div>
+          <div class="nav-text-container">
+            <span class="nav-label">Recording</span>
+            <span class="nav-desc">Capture, Audio & Format</span>
+          </div>
+          <span class="nav-active-bar"></span>
+        </button>
+
+        <button class="nav-item" data-page="shortcuts" id="nav-shortcuts">
+          <div class="nav-icon-container">
+            <i class="ri-keyboard-line"></i>
+          </div>
+          <div class="nav-text-container">
+            <span class="nav-label">Shortcuts</span>
+            <span class="nav-desc">Global Hotkeys & Bindings</span>
+          </div>
+          <span class="nav-active-bar"></span>
+        </button>
+
+        <button class="nav-item" data-page="devices" id="nav-devices">
+          <div class="nav-icon-container">
+            <i class="ri-smartphone-line"></i>
+          </div>
+          <div class="nav-text-container">
+            <span class="nav-label">Devices</span>
+            <span class="nav-desc">Manage Android Device</span>
+          </div>
+          <span class="nav-active-bar"></span>
+        </button>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <button class="btn-sidebar-action" id="btnRestoreDefaults">
+          <i class="ri-restart-line"></i>
+          <span>Restore Defaults</span>
+        </button>
+        <button class="btn-sidebar-action" id="btnCheckUpdates">
+          <i class="ri-download-cloud-2-line"></i>
+          <span>Check Updates</span>
+        </button>
+        <div class="sidebar-version-tag">
+          <span>v1.0.3</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area with 6 View Panels -->
+    <main class="main-viewport" id="mainViewport">
+      
+      <!-- ==============================================
+           PAGE 1: VIDEO SETTINGS
+      =============================================== -->
+      <section class="page-panel active" id="page-video">
+        <div class="page-header">
+          <div class="header-icon-badge">
+            <i class="ri-vidicon-line"></i>
+          </div>
+          <div class="header-title-group">
+            <h1 class="page-title">Video Settings</h1>
+            <p class="page-subtitle">Configure rendering pipeline, resolution scaling, frame rates, and decoding quality.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" onclick="resetPage('video')">Reset Video</button>
+            <button class="btn btn-primary" onclick="savePage('video')">Apply Video</button>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <!-- Card: Resolution & Quality -->
+          <div class="settings-card col-span-2">
+            <div class="card-header">
+              <i class="card-icon ri-aspect-ratio-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Resolution & Scaling</h3>
+                <p class="card-subtitle">Select maximum display resolution. Higher resolutions require higher USB bandwidth.</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="segmented-control" id="videoResolutionControl">
+                <button class="segment-btn" data-value="native">Original</button>
+                <button class="segment-btn" data-value="eco">720p</button>
+                <button class="segment-btn active" data-value="1080p">1080p</button>
+                <button class="segment-btn" data-value="1440p">2K</button>
+                <button class="segment-btn" data-value="4k">4K</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Framerate (FPS) -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="card-icon ri-dashboard-3-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Target Framerate</h3>
+                <p class="card-subtitle">Limit output refresh rate to match your display monitor.</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="pill-group" id="videoFpsGroup">
+                <button class="pill-btn active" data-fps="60">60 FPS</button>
+                <button class="pill-btn" data-fps="90">90 FPS</button>
+                <button class="pill-btn" data-fps="120">120 FPS</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Bitrate Slider -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="card-icon ri-signal-tower-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Video Bitrate</h3>
+                <p class="card-subtitle">Optimized low-temperature streaming. PC GPU upscales and renders at full fidelity.</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="slider-wrapper">
+                <div class="slider-header">
+                  <span class="slider-label">Streaming Bitrate:</span>
+                  <span class="slider-value-badge" id="videoBitrateBadge">8 Mbps (Optimal - Zero Phone Heat)</span>
+                </div>
+                <input type="range" class="custom-range" id="videoBitrateSlider" min="2" max="25" step="1" value="8">
+                <div class="slider-scale">
+                  <span>2 Mbps (Super Eco)</span>
+                  <span>8 Mbps (Optimal Cool)</span>
+                  <span>25 Mbps (High Bitrate)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Hardware Decoder & Codec -->
+          <div class="settings-card" id="cardHardwareDecoder">
+            <div class="card-header">
+              <i class="card-icon ri-cpu-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Hardware Decoder</h3>
+                <p class="card-subtitle" id="hardwareDecoderSubtitle">Accelerated video decompression backend.</p>
+              </div>
+            </div>
+            <div class="card-body form-stack">
+              <div class="form-group" id="groupVideoDecoder">
+                <label class="form-label" for="videoDecoderSelect">Decoding API</label>
+                <select class="custom-select" id="videoDecoderSelect">
+                  <option value="d3d11va" selected>Hardware Accelerated (Auto-Detecting GPU...)</option>
+                  <option value="software">Software Decoding (CPU)</option>
+                </select>
+                <div id="gpuDetectedBadge" style="margin-top: 8px; font-size: 12px; display: none;"></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="videoCodecSelect">Video Stream Codec</label>
+                <select class="custom-select" id="videoCodecSelect">
+                  <option value="h264" selected>H.264 / AVC (Lowest Latency)</option>
+                  <option value="hevc">H.265 / HEVC (Higher Compression)</option>
+                  <option value="av1">AV1 (Next-Gen High Efficiency)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Sync & Display Pipeline -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="card-icon ri-equalizer-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Pipeline Optimizations</h3>
+                <p class="card-subtitle">Tuning latency and tearing prevention.</p>
+              </div>
+            </div>
+            <div class="card-body switch-list">
+              <div class="switch-row">
+                <div class="switch-info">
+                  <span class="switch-title">Ultra Low-Latency Mode</span>
+                  <span class="switch-desc">Suppresses buffered frame queues for zero-lag gaming.</span>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggleLowLatency" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="switch-row">
+                <div class="switch-info">
+                  <span class="switch-title">Vertical Sync (V-Sync)</span>
+                  <span class="switch-desc">Eliminates screen tearing during high-motion scrolling.</span>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggleVsync">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           PAGE 2: GENERAL SETTINGS
+      =============================================== -->
+      <section class="page-panel" id="page-general">
+        <div class="page-header">
+          <div class="header-icon-badge">
+            <i class="ri-equalizer-line"></i>
+          </div>
+          <div class="header-title-group">
+            <h1 class="page-title">General Settings</h1>
+            <p class="page-subtitle">Configure application theme, language, startup behavior, and notification preferences.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" onclick="resetPage('general')">Reset</button>
+            <button class="btn btn-primary" onclick="savePage('general')">Save Changes</button>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <!-- Card: Appearance & Language -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="card-icon ri-palette-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Appearance & Language</h3>
+                <p class="card-subtitle">Personalize your workspace look and localization.</p>
+              </div>
+            </div>
+            <div class="card-body form-stack">
+              <div class="form-group">
+                <label class="form-label" for="generalLanguageSelect">Application Language</label>
+                <select class="custom-select" id="generalLanguageSelect">
+                  <option value="en" selected>English (United States)</option>
+                  <option value="hi">हिन्दी (Hindi)</option>
+                  <option value="es">Español</option>
+                  <option value="de">Deutsch</option>
+                  <option value="ja">日本語 (Japanese)</option>
+                  <option value="zh">简体中文 (Chinese)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Color Theme</label>
+                <div class="theme-picker-group">
+                  <label class="theme-radio-card active">
+                    <input type="radio" name="appTheme" value="dark" checked>
+                    <i class="ri-moon-line"></i>
+                    <span>Dark Obsidian</span>
+                  </label>
+                  <label class="theme-radio-card">
+                    <input type="radio" name="appTheme" value="light">
+                    <i class="ri-sun-line"></i>
+                    <span>Light Clean</span>
+                  </label>
+                  <label class="theme-radio-card">
+                    <input type="radio" name="appTheme" value="system">
+                    <i class="ri-computer-line"></i>
+                    <span>System Sync</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: System Integration -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="card-icon ri-moon-clear-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">System Integration</h3>
+                <p class="card-subtitle">Control startup and window behaviors.</p>
+              </div>
+            </div>
+            <div class="card-body switch-list">
+              <div class="switch-row">
+                <div class="switch-info">
+                  <span class="switch-title">Launch on Windows Startup</span>
+                  <span class="switch-desc">Start loccoMirror automatically when you log into Windows.</span>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggleStartup">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="switch-row">
+                <div class="switch-info">
+                  <span class="switch-title">Minimize to System Tray</span>
+                  <span class="switch-desc">Keep running in the background when the main window is minimized.</span>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggleTray" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="switch-row">
+                <div class="switch-info">
+                  <span class="switch-title">Close Button Minimizes to Tray</span>
+                  <span class="switch-desc">Clicking 'X' will minimize to tray instead of quitting the application.</span>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggleCloseToTray" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="switch-row">
+                <div class="switch-info">
+                  <span class="switch-title">Always on Top</span>
+                  <span class="switch-desc">Keep the screen mirror window above all other desktop applications.</span>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggleAlwaysOnTop">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Notifications & Logging -->
+          <div class="settings-card col-span-2">
+            <div class="card-header">
+              <i class="card-icon ri-notification-3-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Notifications & Diagnostics</h3>
+                <p class="card-subtitle">Manage system alerts and debugging verbosity.</p>
+              </div>
+            </div>
+            <div class="card-body grid-2col">
+              <div class="switch-list">
+                <div class="switch-row">
+                  <div class="switch-info">
+                    <span class="switch-title">Device Connection Alerts</span>
+                    <span class="switch-desc">Toast notification when an Android device is plugged or unplugged.</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="toggleConnNotify" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="switch-row">
+                  <div class="switch-info">
+                    <span class="switch-title">Recording Saved Notification</span>
+                    <span class="switch-desc">Show notification with quick 'Open Folder' action after capture.</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="toggleRecNotify" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-stack">
+                <div class="form-group">
+                  <label class="form-label" for="generalLogLevel">Diagnostic Log Level</label>
+                  <select class="custom-select" id="generalLogLevel">
+                    <option value="info" selected>Info (Standard operational logs)</option>
+                    <option value="debug">Debug (Detailed packet traces & timestamps)</option>
+                    <option value="warn">Warnings & Errors Only</option>
+                    <option value="none">Silent (No disk logging)</option>
+                  </select>
+                </div>
+                <button class="btn btn-outline" id="btnOpenLogs">
+                  <i class="ri-folder-line"></i>
+                  <span>Open Log Directory</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           PAGE 3: RECORDING SETTINGS
+      =============================================== -->
+      <section class="page-panel" id="page-recording">
+        <div class="page-header">
+          <div class="header-icon-badge">
+            <i class="ri-record-circle-line"></i>
+          </div>
+          <div class="header-title-group">
+            <h1 class="page-title">Recording Settings</h1>
+            <p class="page-subtitle">Configure video capture outputs, audio sources, encoders, and recording directory.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" onclick="resetPage('recording')">Reset</button>
+            <button class="btn btn-primary" onclick="savePage('recording')">Save</button>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <!-- Card: Destination Folder -->
+          <div class="settings-card col-span-2">
+            <div class="card-header">
+              <i class="card-icon ri-folder-star-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Output Destination</h3>
+                <p class="card-subtitle">Directory where recorded mirror sessions and instant clips will be stored.</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="file-picker-group">
+                <input type="text" class="text-input font-mono" id="recOutputPath" value="Videos\LoccoMirror_Recordings" readonly>
+                <button class="btn btn-primary" id="btnBrowseFolder">
+                  <i class="ri-folder-open-line"></i>
+                  <span>Browse...</span>
+                </button>
+                <button class="btn btn-outline" id="btnOpenRecFolder">
+                  <i class="ri-external-link-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Format & Encoding -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="card-icon ri-clapperboard-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Container & Encoding</h3>
+                <p class="card-subtitle">File container format and video encoding quality.</p>
+              </div>
+            </div>
+            <div class="card-body form-stack">
+              <div class="form-group">
+                <label class="form-label" for="recFormatSelect">Container Format</label>
+                <select class="custom-select" id="recFormatSelect">
+                  <option value="mp4" selected>MP4 (.mp4 - Universal Compatibility)</option>
+                  <option value="mkv">MKV (.mkv - Crash Resilient / No file corruption)</option>
+                  <option value="webm">WebM (.webm - Web Friendly)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="recQualityPreset">Recording Quality Preset</label>
+                <select class="custom-select" id="recQualityPreset">
+                  <option value="original" selected>Lossless Passthrough (Direct Stream Dump)</option>
+                  <option value="high">High Quality (1080p 60FPS @ 20 Mbps)</option>
+                  <option value="medium">Standard (720p 60FPS @ 10 Mbps)</option>
+                  <option value="low">Low Space (720p 30FPS @ 4 Mbps)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Audio Source for Recording -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="card-icon ri-mic-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Audio Recording Source</h3>
+                <p class="card-subtitle">Choose which audio streams are mixed into the video.</p>
+              </div>
+            </div>
+            <div class="card-body form-stack">
+              <div class="form-group">
+                <label class="form-label" for="recAudioSource">Audio Mix</label>
+                <select class="custom-select" id="recAudioSource">
+                  <option value="both" selected>Device Audio + PC Microphone (Gaming & Commentary)</option>
+                  <option value="device">Device Internal Audio Only</option>
+                  <option value="mic">PC Microphone Only</option>
+                  <option value="mute">Muted (Video Only)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="recAudioBitrate">Audio Quality</label>
+                <select class="custom-select" id="recAudioBitrate">
+                  <option value="320">320 kbps (Studio AAC)</option>
+                  <option value="192" selected>192 kbps (High Fidelity)</option>
+                  <option value="128">128 kbps (Standard)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Automatic Split & Watermark -->
+          <div class="settings-card col-span-2">
+            <div class="card-header">
+              <i class="card-icon ri-scissors-cut-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Segmenting & Watermark</h3>
+                <p class="card-subtitle">Automatic file splitting and visual overlays.</p>
+              </div>
+            </div>
+            <div class="card-body grid-2col">
+              <div class="switch-list">
+                <div class="switch-row">
+                  <div class="switch-info">
+                    <span class="switch-title">Auto-Split Large Recordings</span>
+                    <span class="switch-desc">Split recording automatically when reaching a specific size limit.</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="toggleAutoSplit">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="switch-row">
+                  <div class="switch-info">
+                    <span class="switch-title">Timestamp Watermark</span>
+                    <span class="switch-desc">Burn recording date and time into the bottom-right corner.</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="toggleWatermark">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-group" id="splitSizeContainer">
+                <label class="form-label" for="recSplitSize">Split Size Threshold</label>
+                <select class="custom-select" id="recSplitSize">
+                  <option value="2048">2 GB per file</option>
+                  <option value="4096" selected>4 GB per file (FAT32 Compatible)</option>
+                  <option value="8192">8 GB per file</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           PAGE 4: SHORTCUTS SETTINGS
+      =============================================== -->
+      <section class="page-panel" id="page-shortcuts">
+        <div class="page-header">
+          <div class="header-icon-badge">
+            <i class="ri-keyboard-line"></i>
+          </div>
+          <div class="header-title-group">
+            <h1 class="page-title">Keyboard Shortcuts</h1>
+            <p class="page-subtitle">Configure global hotkeys to trigger actions and shortcuts without interrupting your workflow.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" id="btnResetShortcuts">Reset Hotkeys</button>
+            <button class="btn btn-primary" onclick="savePage('shortcuts')">Save Hotkeys</button>
+          </div>
+        </div>
+
+        <div class="settings-card no-padding">
+          <div class="table-container">
+            <table class="shortcuts-table">
+              <thead>
+                <tr>
+                  <th style="width: 40%;">ACTION</th>
+                  <th style="width: 35%;">GLOBAL KEYBINDING</th>
+                  <th style="width: 25%; text-align: right;">STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="shortcutsTableBody">
+                <!-- Dynamically populated by JS or static fallback -->
+                <tr data-action="toggle_mirror">
+                  <td>
+                    <div class="shortcut-meta">
+                      <span class="shortcut-title">Start / Stop Mirroring</span>
+                      <span class="shortcut-desc">Connects or disconnects the active screen mirror session.</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="keybind-recorder" onclick="startRecordingKey(this, 'toggle_mirror')">
+                      <kbd class="key-chip">Ctrl</kbd>
+                      <span class="key-plus">+</span>
+                      <kbd class="key-chip">M</kbd>
+                      <i class="edit-icon ri-edit-line"></i>
+                    </div>
+                  </td>
+                  <td style="text-align: right;">
+                    <span class="badge-status enabled">Active</span>
+                  </td>
+                </tr>
+
+                <tr data-action="screenshot">
+                  <td>
+                    <div class="shortcut-meta">
+                      <span class="shortcut-title">Take Instant Screenshot</span>
+                      <span class="shortcut-desc">Captures lossless PNG frame directly to the screenshot folder.</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="keybind-recorder" onclick="startRecordingKey(this, 'screenshot')">
+                      <kbd class="key-chip">Ctrl</kbd>
+                      <span class="key-plus">+</span>
+                      <kbd class="key-chip">Shift</kbd>
+                      <span class="key-plus">+</span>
+                      <kbd class="key-chip">S</kbd>
+                      <i class="edit-icon ri-edit-line"></i>
+                    </div>
+                  </td>
+                  <td style="text-align: right;">
+                    <span class="badge-status enabled">Active</span>
+                  </td>
+                </tr>
+
+                <tr data-action="toggle_recording">
+                  <td>
+                    <div class="shortcut-meta">
+                      <span class="shortcut-title">Start / Stop Recording</span>
+                      <span class="shortcut-desc">Toggles high-definition video recording to disk.</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="keybind-recorder" onclick="startRecordingKey(this, 'toggle_recording')">
+                      <kbd class="key-chip">Ctrl</kbd>
+                      <span class="key-plus">+</span>
+                      <kbd class="key-chip">R</kbd>
+                      <i class="edit-icon ri-edit-line"></i>
+                    </div>
+                  </td>
+                  <td style="text-align: right;">
+                    <span class="badge-status enabled">Active</span>
+                  </td>
+                </tr>
+
+                <tr data-action="toggle_fullscreen">
+                  <td>
+                    <div class="shortcut-meta">
+                      <span class="shortcut-title">Toggle Fullscreen Mode</span>
+                      <span class="shortcut-desc">Switches the mirror window to borderless full display.</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="keybind-recorder" onclick="startRecordingKey(this, 'toggle_fullscreen')">
+                      <kbd class="key-chip">F11</kbd>
+                      <i class="edit-icon ri-edit-line"></i>
+                    </div>
+                  </td>
+                  <td style="text-align: right;">
+                    <span class="badge-status enabled">Active</span>
+                  </td>
+                </tr>
+
+                <tr data-action="screen_off">
+                  <td>
+                    <div class="shortcut-meta">
+                      <span class="shortcut-title">Turn Off Android Screen</span>
+                      <span class="shortcut-desc">Puts phone screen to sleep while keeping PC mirror active.</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="keybind-recorder" onclick="startRecordingKey(this, 'screen_off')">
+                      <kbd class="key-chip">Ctrl</kbd>
+                      <span class="key-plus">+</span>
+                      <kbd class="key-chip">O</kbd>
+                      <i class="edit-icon ri-edit-line"></i>
+                    </div>
+                  </td>
+                  <td style="text-align: right;">
+                    <span class="badge-status enabled">Active</span>
+                  </td>
+                </tr>
+
+                <tr data-action="volume_up">
+                  <td>
+                    <div class="shortcut-meta">
+                      <span class="shortcut-title">Volume Up</span>
+                      <span class="shortcut-desc">Increases device audio stream level.</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="keybind-recorder" onclick="startRecordingKey(this, 'volume_up')">
+                      <kbd class="key-chip">Ctrl</kbd>
+                      <span class="key-plus">+</span>
+                      <kbd class="key-chip">↑</kbd>
+                      <i class="edit-icon ri-edit-line"></i>
+                    </div>
+                  </td>
+                  <td style="text-align: right;">
+                    <span class="badge-status enabled">Active</span>
+                  </td>
+                </tr>
+
+                <tr data-action="volume_down">
+                  <td>
+                    <div class="shortcut-meta">
+                      <span class="shortcut-title">Volume Down</span>
+                      <span class="shortcut-desc">Decreases device audio stream level.</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="keybind-recorder" onclick="startRecordingKey(this, 'volume_down')">
+                      <kbd class="key-chip">Ctrl</kbd>
+                      <span class="key-plus">+</span>
+                      <kbd class="key-chip">↓</kbd>
+                      <i class="edit-icon ri-edit-line"></i>
+                    </div>
+                  </td>
+                  <td style="text-align: right;">
+                    <span class="badge-status enabled">Active</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           PAGE 6: DEVICES
+      =============================================== -->
+      <section class="page-panel" id="page-devices">
+        <div class="page-header">
+          <div class="header-icon-badge">
+            <i class="ri-smartphone-line"></i>
+          </div>
+          <div class="header-title-group">
+            <h1 class="page-title">Connected Devices</h1>
+            <p class="page-subtitle">Discover, connect and manage Android devices via ADB. Each device shows its negotiated max resolution badge after codec probing.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary" id="btnConnectAoa" style="display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, #3b82f6, #6366f1); border:none; box-shadow:0 2px 10px rgba(99,102,241,0.35);">
+              <i class="ri-flashlight-line" style="font-size:16px"></i>
+              AOA Plug &amp; Play (&lt;5ms)
+            </button>
+            <button class="btn btn-secondary" id="btnRefreshDevices">
+              <i class="ri-refresh-line" style="font-size:16px"></i>
+              Scan
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <!-- Scan Spinner -->
+          <div id="deviceScanSpinner" style="display:none; align-items:center; gap:8px; padding:8px 0; color:var(--text-muted); font-size:13px;">
+            <i class="spin-animation ri-loader-4-line" style="font-size:18px"></i>
+            <span>Scanning for devices via ADB...</span>
+          </div>
+
+          <!-- Device List -->
+          <div class="settings-card col-span-2" style="padding:0; overflow:hidden;">
+            <div class="card-header" style="padding:16px 20px 12px;">
+              <i class="card-icon ri-usb-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Android Devices</h3>
+                <p class="card-subtitle">USB &amp; Wi-Fi ADB devices. Connect to forward ports 5000 &amp; 5001 for mirroring.</p>
+              </div>
+            </div>
+            <div id="deviceListContainer" style="padding:0 12px 12px; display:flex; flex-direction:column; gap:8px;"></div>
+
+            <!-- Empty State -->
+            <div id="deviceListEmpty" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; gap:12px; color:var(--text-muted);">
+              <i class="ri-smartphone-line" style="font-size:48px; opacity:0.35"></i>
+              <div style="text-align:center;">
+                <div style="font-weight:600; font-size:14px; margin-bottom:4px;">No Android Devices Detected</div>
+                <div style="font-size:12px; opacity:0.7;">Connect your phone via USB and ensure ADB is authorized on the device.</div>
+              </div>
+              <button class="btn btn-secondary" onclick="document.getElementById('btnRefreshDevices').click()" style="margin-top:8px;">
+                <i class="ri-refresh-line" style="font-size:16px"></i>
+                Retry Scan
+              </button>
+            </div>
+          </div>
+
+          <!-- Connection Info Card -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="card-icon ri-information-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Hardware Badges</h3>
+                <p class="card-subtitle">Shown after Android codec probing.</p>
+              </div>
+            </div>
+            <div class="card-body" style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="device-hw-badge badge-4k" style="flex-shrink:0;">4K Ready</span>
+                <span style="font-size:12px; color:var(--text-muted);">Snapdragon 8 Gen / Tensor G3 — 4K HEVC supported</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="device-hw-badge badge-2k" style="flex-shrink:0;">2K Ready</span>
+                <span style="font-size:12px; color:var(--text-muted);">Mid-range chipsets — 2K AVC/HEVC supported</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="device-hw-badge badge-hd" style="flex-shrink:0;">1080p</span>
+                <span style="font-size:12px; color:var(--text-muted);">Budget Helio / Exynos — capped at FHD</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="device-hw-badge badge-limit" style="flex-shrink:0;">1080p Max (HW Limit)</span>
+                <span style="font-size:12px; color:var(--text-muted);">Auto-downgraded from requested resolution</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ADB Setup Guide -->
+          <div class="settings-card">
+            <div class="card-header">
+              <i class="card-icon ri-terminal-box-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">ADB Setup</h3>
+                <p class="card-subtitle">First-time USB setup steps.</p>
+              </div>
+            </div>
+            <div class="card-body" style="display:flex; flex-direction:column; gap:8px; font-size:12px; color:var(--text-muted); line-height:1.6;">
+              <div><strong style="color:var(--text-primary);">1.</strong> Enable Developer Options on Android: Settings → About → tap Build Number 7×</div>
+              <div><strong style="color:var(--text-primary);">2.</strong> Enable USB Debugging in Developer Options</div>
+              <div><strong style="color:var(--text-primary);">3.</strong> Connect via USB &amp; tap "Allow" on the ADB authorization prompt</div>
+              <div><strong style="color:var(--text-primary);">4.</strong> Click Scan above — device should appear with a "Connected" badge</div>
+              <div style="margin-top:4px; padding:8px; background:var(--bg-card); border-radius:6px; font-family:monospace; font-size:11px; color:var(--accent-primary);">adb devices -l</div>
+            </div>
+          </div>
+
+          <!-- Quick Actions: Install App & Restart ADB -->
+          <div class="settings-card col-span-2">
+            <div class="card-header">
+              <i class="card-icon ri-android-line"></i>
+              <div class="card-header-text">
+                <h3 class="card-title">Device &amp; App Management</h3>
+                <p class="card-subtitle">Install or update the Android companion app directly to your connected device.</p>
+              </div>
+            </div>
+            <div class="card-body" style="display:flex; gap:12px; flex-wrap:wrap;">
+              <button class="btn btn-primary" id="btnInstallPhoneApk">
+                <i class="ri-install-line"></i>
+                <span>Install App on Connected Phone</span>
+              </button>
+              <button class="btn btn-outline" id="btnRestartAdb">
+                <i class="ri-restart-line"></i>
+                <span>Restart ADB Server</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- DouWan-Style Floating Glassmorphic Quick Toolbar -->
+  <div class="floating-quick-toolbar" id="floatingQuickToolbar">
+    <div class="floating-toolbar-handle" title="DouWan Quick Tools">
+      <i class="ri-equalizer-line" style="font-size: 16px;"></i>
+    </div>
+    <div class="floating-toolbar-actions">
+      <button class="tb-btn" id="btnTbRotate" title="Rotate 90° Clockwise">
+        <i class="ri-anticlockwise-2-line"></i>
+        <span class="tb-tooltip">Rotate 90°</span>
+      </button>
+      <button class="tb-btn" id="btnTbFullscreen" title="Borderless Fullscreen (F11)">
+        <i class="ri-fullscreen-line"></i>
+        <span class="tb-tooltip">Fullscreen (F11)</span>
+      </button>
+      <button class="tb-btn" id="btnTbPin" title="Pin Always on Top">
+        <i class="ri-pushpin-line"></i>
+        <span class="tb-tooltip">Always on Top</span>
+      </button>
+      <button class="tb-btn" id="btnTbSnap" title="Auto-Aspect Snap">
+        <i class="ri-aspect-ratio-line"></i>
+        <span class="tb-tooltip">Snap Ratio</span>
+      </button>
+      <button class="tb-btn" id="btnTbSleep" title="Phone Screen Sleep (Dim Screen)">
+        <i class="ri-smartphone-line"></i>
+        <span class="tb-tooltip">Screen Sleep</span>
+      </button>
+      <button class="tb-btn" id="btnTbScreenshot" title="Capture PNG Screenshot">
+        <i class="ri-camera-line"></i>
+        <span class="tb-tooltip">Screenshot</span>
+      </button>
+      <div class="tb-divider"></div>
+      <div class="tb-vol-container">
+        <button class="tb-btn" id="btnTbVolIcon" title="WASAPI Volume">
+          <i class="ri-volume-up-line"></i>
+        </button>
+        <div class="tb-vol-slider-box">
+          <input type="range" id="tbQuickVolume" min="0" max="100" value="100" class="tb-slider">
+          <span id="tbQuickVolumeLabel" style="font-size: 10px; font-weight: 700;">100%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Glassmorphic Authentication Modal (Sign In / Register) -->
+  <div class="auth-modal-overlay hidden" id="authModalOverlay">
+    <div class="auth-modal-card">
+      <button class="auth-modal-close" id="authModalClose" title="Close Modal">
+        <i class="ri-close-line"></i>
+      </button>
+
+      <div class="auth-modal-header">
+        <div class="auth-logo-badge">
+          <img src="logo.png" alt="loccoMirror" class="auth-logo-img">
+        </div>
+        <h2 class="auth-modal-title">loccoMirror Cloud</h2>
+        <p class="auth-modal-subtitle">Sign in or create an account to sync device profiles, custom presets & pro ultra-low latency mirroring.</p>
+      </div>
+
+      <!-- Auth Tab Switcher -->
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tabBtnSignIn">Sign In</button>
+        <button class="auth-tab-btn" id="tabBtnSignUp">Create Account</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form class="auth-form" id="formSignIn">
+        <div class="auth-input-group">
+          <label class="auth-label" for="signInEmail">Email Address</label>
+          <div class="auth-input-wrapper">
+            <i class="auth-input-icon ri-mail-line"></i>
+            <input type="email" id="signInEmail" class="auth-input" placeholder="name@example.com" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="auth-input-group">
+          <div class="auth-label-row">
+            <label class="auth-label" for="signInPassword">Password</label>
+          </div>
+          <div class="auth-input-wrapper">
+            <i class="auth-input-icon ri-lock-line"></i>
+            <input type="password" id="signInPassword" class="auth-input" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="auth-pwd-toggle" id="toggleSignInPwd" title="Show/Hide Password">
+              <i class="ri-eye-line"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-form-footer-row">
+          <label class="auth-checkbox-label">
+            <input type="checkbox" id="rememberMeCheck" checked>
+            <span>Remember login</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-auth-submit" id="btnSignInSubmit">
+          <i class="btn-icon ri-login-box-line"></i>
+          <span class="btn-text">Sign In to loccoMirror</span>
+          <span class="btn-spinner hidden" id="spinnerSignIn"></span>
+        </button>
+      </form>
+
+      <!-- Sign Up / Register Form -->
+      <form class="auth-form hidden" id="formSignUp">
+        <div class="auth-input-group">
+          <label class="auth-label" for="signUpName">Full Name</label>
+          <div class="auth-input-wrapper">
+            <i class="auth-input-icon ri-user-line"></i>
+            <input type="text" id="signUpName" class="auth-input" placeholder="John Doe" required autocomplete="name">
+          </div>
+        </div>
+
+        <div class="auth-input-group">
+          <label class="auth-label" for="signUpEmail">Email Address</label>
+          <div class="auth-input-wrapper">
+            <i class="auth-input-icon ri-mail-line"></i>
+            <input type="email" id="signUpEmail" class="auth-input" placeholder="name@example.com" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="auth-input-group">
+          <label class="auth-label" for="signUpPassword">Create Password</label>
+          <div class="auth-input-wrapper">
+            <i class="auth-input-icon ri-lock-line"></i>
+            <input type="password" id="signUpPassword" class="auth-input" placeholder="At least 6 characters" required minlength="6" autocomplete="new-password">
+            <button type="button" class="auth-pwd-toggle" id="toggleSignUpPwd" title="Show/Hide Password">
+              <i class="ri-eye-line"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-input-group">
+          <label class="auth-label" for="signUpConfirmPassword">Confirm Password</label>
+          <div class="auth-input-wrapper">
+            <i class="auth-input-icon ri-lock-password-line"></i>
+            <input type="password" id="signUpConfirmPassword" class="auth-input" placeholder="Repeat your password" required minlength="6" autocomplete="new-password">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-auth-submit" id="btnSignUpSubmit">
+          <i class="btn-icon ri-user-add-line"></i>
+          <span class="btn-text">Create Account</span>
+          <span class="btn-spinner hidden" id="spinnerSignUp"></span>
+        </button>
+      </form>
+
+      <div class="auth-modal-bottom-note">
+        <span class="note-text">MongoDB Secured • Encrypted JWT Authentication</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backend API Configuration Modal -->
+  <div class="auth-modal-overlay hidden" id="apiConfigModalOverlay">
+    <div class="auth-modal-card api-config-card">
+      <button class="auth-modal-close" id="apiConfigModalClose" title="Close Modal">
+        <i class="ri-close-line"></i>
+      </button>
+
+      <div class="auth-modal-header">
+        <div class="auth-logo-badge">
+          <i class="ri-cloud-line" style="font-size: 28px; color: #3b82f6;"></i>
+        </div>
+        <h2 class="auth-modal-title">Cloud & Backend API Config</h2>
+        <p class="auth-modal-subtitle">Connect your deployed Vercel Node.js + MongoDB backend to loccoMirror.</p>
+      </div>
+
+      <div class="auth-input-group">
+        <label class="auth-label" for="inputBackendUrl">Backend API Gateway URL</label>
+        <div class="auth-input-wrapper">
+          <i class="auth-input-icon ri-link"></i>
+          <input type="url" id="inputBackendUrl" class="auth-input" placeholder="https://loccomirror-api.vercel.app">
+        </div>
+        <span class="auth-input-hint">Default: Vercel Cloud Serverless API or <code>http://localhost:5000</code></span>
+      </div>
+
+      <div class="api-status-box" id="apiStatusBox">
+        <div class="api-status-indicator" id="apiStatusIndicator"></div>
+        <span class="api-status-text" id="apiStatusText">Checking API Server status...</span>
+      </div>
+
+      <div class="api-modal-actions">
+        <button type="button" class="btn btn-secondary" id="btnTestApiConnection">
+          <i class="ri-wifi-line"></i>
+          <span>Test Server Connection</span>
+        </button>
+        <button type="button" class="btn btn-primary" id="btnSaveApiConfig">
+          <i class="ri-save-line"></i>
+          <span>Save & Connect</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Overlay -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- JavaScript Application Entry -->
+  <script src="app.js"></script>
+</body>
+</html>
