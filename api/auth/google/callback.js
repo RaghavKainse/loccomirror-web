@@ -106,7 +106,7 @@ module.exports = async (req, res) => {
       email: userData.email,
       name: userData.name || userData.given_name || 'Google User',
       avatar: userData.picture || '',
-      plan: 'Signed In',
+      plan: 'Pro',
       token: tokenData.id_token || tokenData.access_token,
       loginAt: Date.now(),
     };
@@ -177,6 +177,7 @@ module.exports = async (req, res) => {
     if (window.chrome && window.chrome.webview) {
       try {
         window.chrome.webview.postMessage(JSON.stringify({
+          action: 'user_auth_state',
           type: 'user_auth_state',
           ...authData
         }));
