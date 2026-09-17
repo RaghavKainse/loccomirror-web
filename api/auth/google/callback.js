@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
         <div class="card">
           <h2>Sign In Failed</h2>
           <p>${error ? `Error: ${error}` : 'No authorization code received.'}</p>
-          <a class="btn" href="/">Return to loccoMirror</a>
+          <button class="btn" onclick="window.close()" style="border:none; cursor:pointer;">Close Window</button>
         </div>
       </body>
       </html>
@@ -111,11 +111,17 @@ module.exports = async (req, res) => {
       loginAt: Date.now(),
     };
 
+    const payloadJson = JSON.stringify(authPayload);
+    const base64Code = Buffer.from(payloadJson).toString('base64');
+    const base64UrlCode = Buffer.from(payloadJson).toString('base64url');
+    const authCode = `LM-${base64Code}`;
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Signing In...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signed In - loccoMirror</title>
   <style>
     body {
       background: #090d16;
@@ -124,69 +130,216 @@ module.exports = async (req, res) => {
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
       padding: 20px;
+      box-sizing: border-box;
     }
     .card {
       background: #111827;
       border: 1px solid #1f2937;
-      padding: 32px;
-      border-radius: 16px;
+      padding: 32px 28px;
+      border-radius: 20px;
       text-align: center;
-      max-width: 360px;
+      max-width: 400px;
       width: 100%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
     }
     .avatar {
-      width: 60px;
-      height: 60px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
-      margin: 0 auto 12px;
+      margin: 0 auto 14px;
       object-fit: cover;
+      border: 2px solid #10b981;
     }
-    h2 { margin: 0 0 4px; font-size: 18px; color: #f1f5f9; }
-    p { color: #94a3b8; font-size: 13px; margin: 0; }
-    .spinner {
-      width: 24px;
-      height: 24px;
-      border: 3px solid rgba(255, 255, 255, 0.1);
-      border-top-color: #10b981;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 18px auto 0;
+    h2 { margin: 0 0 6px; font-size: 20px; color: #f1f5f9; font-weight: 700; }
+    .email { color: #94a3b8; font-size: 13px; margin: 0 0 18px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      margin-bottom: 20px;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 13px 16px;
+      background: #10b981;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      box-sizing: border-box;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #059669; }
+    .code-box {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #1f2937;
+      text-align: left;
+    }
+    .code-label {
+      font-size: 11px;
+      color: #64748b;
+      margin-bottom: 8px;
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    .code-row {
+      display: flex;
+      gap: 8px;
+    }
+    .code-input {
+      flex: 1;
+      background: #090d16;
+      border: 1px solid #374151;
+      color: #cbd5e1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-family: monospace;
+      outline: none;
+    }
+    .btn-copy {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #e2e8f0;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .btn-copy:hover { background: #374151; }
+    .status-msg {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #34d399;
+      min-height: 18px;
+    }
+    .footer-link {
+      margin-top: 16px;
+      display: block;
+      font-size: 12px;
+      color: #64748b;
+      text-decoration: none;
+    }
+    .footer-link:hover { color: #94a3b8; }
   </style>
 </head>
 <body>
   <div class="card">
     ${userData.picture ? `<img class="avatar" src="${userData.picture}" alt="Avatar" referrerpolicy="no-referrer">` : ''}
-    <h2>Welcome, ${userData.name || 'User'}</h2>
-    <p>${userData.email || ''}</p>
-    <div class="spinner"></div>
-    <p style="margin-top: 14px; font-size: 12px; color: #64748b;">Signing in...</p>
+    <h2>Welcome, ${userData.name || 'User'}!</h2>
+    <p class="email">${userData.email || ''}</p>
+    <div class="badge">PRO ACCOUNT ACTIVATED</div>
+
+    <button id="open-btn" class="btn-primary" onclick="openApp()">Open Locco Mirror Software</button>
+    <div id="status-msg" class="status-msg">Opening desktop software...</div>
+
+    <div class="code-box">
+      <span class="code-label">Or copy sign-in code:</span>
+      <div class="code-row">
+        <input id="code-val" class="code-input" type="text" readonly value="${authCode}">
+        <button id="copy-btn" class="btn-copy" onclick="copyCode()">Copy Code</button>
+      </div>
+    </div>
+
+    <div style="margin-top: 22px; padding-top: 16px; border-top: 1px solid #1f2937;">
+      <p style="margin: 0 0 10px; font-size: 12px; color: #94a3b8;">You can now safely close this browser window.</p>
+      <button onclick="window.close()" style="background: #1f2937; color: #cbd5e1; border: 1px solid #374151; padding: 7px 18px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 500;">Close Tab</button>
+    </div>
   </div>
+
   <script>
-    const authData = ${JSON.stringify(authPayload)};
+    const authPayload = ${payloadJson};
+    const b64Data = "${base64Code}";
+    const b64Url = "${base64UrlCode}";
+
+    // Persist in web localStorage
     try {
-      localStorage.setItem('locco_user_auth', JSON.stringify(authData));
-      localStorage.setItem('loccomirror_user_profile', JSON.stringify(authData));
-      localStorage.setItem('loccomirror_auth_token', authData.token);
+      localStorage.setItem('locco_user_auth', JSON.stringify(authPayload));
+      localStorage.setItem('loccomirror_user_profile', JSON.stringify(authPayload));
+      if (authPayload.token) localStorage.setItem('loccomirror_auth_token', authPayload.token);
     } catch (e) {}
 
+    // Post message if opened in WebView2 or popup
     if (window.chrome && window.chrome.webview) {
       try {
         window.chrome.webview.postMessage(JSON.stringify({
           action: 'user_auth_state',
           type: 'user_auth_state',
-          ...authData
+          ...authPayload
         }));
       } catch (e) {}
     }
+    try {
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'locco_auth_success', action: 'user_auth_state', payload: authPayload }, '*');
+      }
+    } catch (e) {}
 
-    setTimeout(function() {
-      window.location.replace('/');
-    }, 400);
+    // Send auth to local desktop C++ bridge on 127.0.0.1:18245
+    function syncToLocalBridge() {
+      try {
+        fetch('http://127.0.0.1:18245/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(authPayload),
+          mode: 'cors',
+        }).then(function(res) {
+          if (res.ok) {
+            const el = document.getElementById('status-msg');
+            if (el) el.innerText = 'Connected! Desktop software is now authenticated.';
+          }
+        }).catch(function() {
+          // Fallback image beacon
+          try {
+            const img = new Image();
+            img.src = 'http://127.0.0.1:18245/auth?data=' + encodeURIComponent(b64Url);
+          } catch (e) {}
+        });
+      } catch(e) {}
+    }
+
+    // Launch desktop software directly via custom URI protocol
+    function openApp() {
+      syncToLocalBridge();
+      try {
+        window.location.href = 'loccomirror://auth?data=' + encodeURIComponent(b64Url);
+      } catch (e) {}
+      const el = document.getElementById('status-msg');
+      if (el) el.innerText = 'Redirecting to Locco Mirror software...';
+    }
+
+    // Auto-launch immediately on page load
+    syncToLocalBridge();
+    setTimeout(openApp, 100);
+    setTimeout(openApp, 600);
+
+    // Copy code helper
+    function copyCode() {
+      const input = document.getElementById('code-val');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(function() {
+        const btn = document.getElementById('copy-btn');
+        btn.innerText = 'Copied!';
+        setTimeout(function() { btn.innerText = 'Copy Code'; }, 2000);
+      });
+    }
   </script>
 </body>
 </html>`;
@@ -240,7 +393,7 @@ module.exports = async (req, res) => {
         <div class="card">
           <h2>Sign In Error</h2>
           <p>${err.message || 'Could not sign in with Google.'}</p>
-          <a class="btn" href="/">Return to loccoMirror</a>
+          <button class="btn" onclick="window.close()" style="border:none; cursor:pointer;">Close Window</button>
         </div>
       </body>
       </html>
