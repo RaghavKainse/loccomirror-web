@@ -250,14 +250,6 @@ module.exports = async (req, res) => {
     <button id="open-btn" class="btn-primary" onclick="openApp()">Open Locco Mirror Software</button>
     <div id="status-msg" class="status-msg">Opening desktop software...</div>
 
-    <div class="code-box">
-      <span class="code-label">Or copy sign-in code:</span>
-      <div class="code-row">
-        <input id="code-val" class="code-input" type="text" readonly value="${authCode}">
-        <button id="copy-btn" class="btn-copy" onclick="copyCode()">Copy Code</button>
-      </div>
-    </div>
-
     <div style="margin-top: 22px; padding-top: 16px; border-top: 1px solid #1f2937;">
       <p style="margin: 0 0 10px; font-size: 12px; color: #94a3b8;">You can now safely close this browser window.</p>
       <button onclick="window.close()" style="background: #1f2937; color: #cbd5e1; border: 1px solid #374151; padding: 7px 18px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 500;">Close Tab</button>
@@ -329,17 +321,6 @@ module.exports = async (req, res) => {
     syncToLocalBridge();
     setTimeout(openApp, 100);
     setTimeout(openApp, 600);
-
-    // Copy code helper
-    function copyCode() {
-      const input = document.getElementById('code-val');
-      input.select();
-      navigator.clipboard.writeText(input.value).then(function() {
-        const btn = document.getElementById('copy-btn');
-        btn.innerText = 'Copied!';
-        setTimeout(function() { btn.innerText = 'Copy Code'; }, 2000);
-      });
-    }
   </script>
 </body>
 </html>`;
