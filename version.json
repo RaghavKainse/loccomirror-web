@@ -1,6 +1,8 @@
 {
   "latest_version": "1.0.4",
+  "apk_version": "1.0.4",
   "min_version": "1.0.0",
   "download_url": "https://github.com/RaghavKainse/loccomirror/releases/download/v1.0.4/LoccoMirror_Setup_v1.0.4.exe",
-  "release_notes": "• New Official Locco Mirror Branding & App Icon across PC and Mobile\n• Beautiful Frosted Glass White UI Theme\n• Seamless Auto-Reconnect & Offline Fallback Dialog\n• Ultra-Low Latency Direct3D 11 NV12 Hardware Mirroring & WASAPI Audio"
+  "apk_url": "https://raw.githubusercontent.com/RaghavKainse/loccomirror/main/apk/LoccoMirror.apk",
+  "release_notes": "• New Minimalist Plug & Mirror UI with Connection Animation\n• Auto-Update support for Android app\n• Ultra-Low Latency Hardware Mirroring & WASAPI Audio"
 }
