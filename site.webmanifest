@@ -1,0 +1,23 @@
+{
+  "name": "Locco Mirror — Ultra-Low Latency USB Screen & Audio Mirroring",
+  "short_name": "Locco Mirror",
+  "description": "Real-time USB screen and uncompressed 48kHz audio mirroring from Android to Windows with sub-10ms latency.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0078d4",
+  "icons": [
+    {
+      "src": "/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

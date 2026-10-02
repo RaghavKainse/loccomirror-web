@@ -1,0 +1,33 @@
+# Robots.txt for Locco Mirror (https://loccomirror.in & https://www.loccomirror.in)
+User-agent: *
+Allow: /
+Allow: /downloads/
+
+User-agent: Googlebot
+Allow: /
+Allow: /downloads/
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+Sitemap: https://loccomirror.in/sitemap.xml
+Sitemap: https://www.loccomirror.in/sitemap.xml
+Host: https://loccomirror.in
