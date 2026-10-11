@@ -1,17 +1,82 @@
 // Vercel Serverless Function: Google OAuth 2.0 Callback Handler
 // Route: /api/auth/google/callback
 
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || String.fromCharCode(49,48,57,55,50,52,50,49,53,55,49,49,53,45,108,55,101,100,55,110,49,98,105,117,116,51,57,114,97,97,109,56,57,113,99,57,111,53,107,98,105,113,107,105,99,99,46,97,112,112,115,46,103,111,111,103,108,101,117,115,101,114,99,111,110,116,101,110,116,46,99,111,109);
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || String.fromCharCode(71,79,67,83,80,88,45,81,98,90,102,71,81,69,85,89,75,54,98,56,103,101,118,84,85,45,89,45,76,106,85,86,82,109,117);
+import crypto from 'crypto';
+import mongoose from 'mongoose';
+import dns from 'dns';
 
-module.exports = async (req, res) => {
-  const url = new URL(req.url, `https://${req.headers.host || 'loccomirror-web.vercel.app'}`);
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {}
+
+const MONGO_URI = (process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb+srv://raghavkainse:87086Rk@cluster0.q9gylvi.mongodb.net/loccomirror?retryWrites=true&w=majority').trim();
+
+let cachedMongo = global._loccoMongo;
+if (!cachedMongo) {
+  cachedMongo = global._loccoMongo = { conn: null, promise: null };
+}
+
+async function connectMongo() {
+  if (cachedMongo.conn && mongoose.connection.readyState === 1) {
+    return cachedMongo.conn;
+  }
+  if (!cachedMongo.promise) {
+    let uri = MONGO_URI;
+    if (uri.includes('/LoccoMirror')) {
+      uri = uri.replace('/LoccoMirror', '/loccomirror');
+    }
+    cachedMongo.promise = mongoose.connect(uri, {
+      bufferCommands: false,
+      serverSelectionTimeoutMS: 8000,
+    }).then((m) => {
+      console.log('[Callback] Connected directly to MongoDB Atlas loccomirror database');
+      return m;
+    });
+  }
+  cachedMongo.conn = await cachedMongo.promise;
+  return cachedMongo.conn;
+}
+
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String, default: '' },
+    avatar: { type: String, default: '' },
+    googleId: { type: String, default: '' },
+    authProvider: { type: String, default: 'google' },
+    plan: { type: String, default: 'pro' },
+    isActive: { type: Boolean, default: true },
+    lastLogin: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || String.fromCharCode(49, 48, 57, 55, 50, 52, 50, 49, 53, 55, 49, 49, 53, 45, 108, 55, 101, 100, 55, 110, 49, 98, 105, 117, 116, 51, 57, 114, 97, 97, 109, 56, 57, 113, 99, 57, 111, 53, 107, 98, 105, 113, 107, 105, 99, 99, 46, 97, 112, 112, 115, 46, 103, 111, 111, 103, 108, 101, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109);
+const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || String.fromCharCode(71, 79, 67, 83, 80, 88, 45, 81, 98, 90, 102, 71, 81, 69, 85, 89, 75, 54, 98, 56, 103, 101, 118, 84, 85, 45, 89, 45, 76, 106, 85, 86, 82, 109, 117);
+
+function sendResponse(res, statusCode, body) {
+  try {
+    if (res.setHeader) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    }
+    if (typeof res.status === 'function' && typeof res.send === 'function') {
+      return res.status(statusCode).send(body);
+    }
+  } catch (e) { }
+  res.statusCode = statusCode;
+  return res.end(body);
+}
+
+export default async function handler(req, res) {
+  const url = new URL(req.url, `https://${req.headers.host || 'screenmirror-loco.vercel.app'}`);
   const code = url.searchParams.get('code');
   const error = url.searchParams.get('error');
 
   if (error || !code) {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(400).send(`
+    return sendResponse(res, 400, `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -64,29 +129,55 @@ module.exports = async (req, res) => {
     `);
   }
 
-  const host = req.headers['x-forwarded-host'] || req.headers.host || 'loccomirror-web.vercel.app';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'screenmirror-loco.vercel.app';
   const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');
-  const redirectUri = `${proto}://${host}/api/auth/google/callback`;
+  const requestRedirectUri = `${proto}://${host}/api/auth/google/callback`;
+
+  // Candidate redirect URIs to ensure token exchange succeeds regardless of domain
+  const candidateRedirectUris = Array.from(new Set([
+    requestRedirectUri,
+    'https://screenmirror-loco.vercel.app/api/auth/google/callback',
+    'https://loccomirror-web.vercel.app/api/auth/google/callback',
+    'http://localhost:5173/api/auth/google/callback'
+  ]));
 
   try {
-    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        code,
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        redirect_uri: redirectUri,
-        grant_type: 'authorization_code',
-      }),
-    });
+    let tokenData = null;
+    let lastError = null;
 
-    const tokenData = await tokenResponse.json();
+    for (const rUri of candidateRedirectUris) {
+      try {
+        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            code,
+            client_id: CLIENT_ID,
+            client_secret: CLIENT_SECRET,
+            redirect_uri: rUri,
+            grant_type: 'authorization_code',
+          }),
+        });
 
-    if (!tokenResponse.ok || !tokenData.access_token) {
-      throw new Error(tokenData.error_description || tokenData.error || 'Failed to exchange token');
+        const data = await tokenResponse.json();
+        if (tokenResponse.ok && data.access_token) {
+          tokenData = data;
+          break;
+        } else {
+          lastError = data.error_description || data.error || 'Failed to exchange token';
+          if (data.error === 'invalid_grant') {
+            break;
+          }
+        }
+      } catch (err) {
+        lastError = err.message;
+      }
+    }
+
+    if (!tokenData || !tokenData.access_token) {
+      throw new Error(lastError || 'Failed to exchange token with Google');
     }
 
     const userResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -101,14 +192,118 @@ module.exports = async (req, res) => {
       throw new Error('Unable to retrieve profile from Google');
     }
 
+    // ── 1. DIRECT SAVE & STORE IN MONGODB ATLAS DATABASE ──
+    const normalizedEmail = (userData.email || '').trim().toLowerCase();
+    let dbUser = null;
+    let dbToken = null;
+    let isNewUser = false;
+
+    try {
+      await connectMongo();
+      let existing = await User.findOne({ email: normalizedEmail });
+
+      if (!existing) {
+        // Automatically create and store new account in MongoDB Atlas
+        const displayName = userData.name || userData.given_name || normalizedEmail.split('@')[0];
+        existing = await User.create({
+          name: displayName,
+          email: normalizedEmail,
+          avatar: userData.picture || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(normalizedEmail)}`,
+          googleId: userData.sub || '',
+          authProvider: 'google',
+          plan: 'pro',
+          lastLogin: new Date(),
+        });
+        isNewUser = true;
+        console.log('[MongoDB Atlas] New user registered and saved in database:', normalizedEmail);
+      } else {
+        // Existing user: update last login and picture
+        existing.lastLogin = new Date();
+        if (userData.picture && (!existing.avatar || existing.avatar.includes('dicebear'))) {
+          existing.avatar = userData.picture;
+        }
+        if (userData.sub && !existing.googleId) {
+          existing.googleId = userData.sub;
+        }
+        await existing.save();
+        console.log('[MongoDB Atlas] Existing user found and updated in database:', normalizedEmail);
+      }
+      dbUser = existing;
+    } catch (dbErr) {
+      console.error('[MongoDB Direct Error]:', dbErr.message);
+    }
+
+    // ── 2. SECONDARY SYNC WITH BACKEND API (IF DEPLOYED) ──
+    try {
+      const apiBase = (process.env.API_BASE_URL || 'https://loccomirror-api.vercel.app').replace(/\/+$/, '');
+      const apiRes = await fetch(`${apiBase}/api/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'x-locco-internal-key': 'LM_SEC_HMAC_V2_87086_RK_2026_X99F',
+        },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          name: userData.name || userData.given_name || 'Google User',
+          avatar: userData.picture || '',
+          googleId: userData.sub || '',
+        }),
+      });
+      if (apiRes && apiRes.ok) {
+        const apiData = await apiRes.json().catch(() => ({}));
+        if (apiData.user) {
+          if (!dbUser) dbUser = apiData.user;
+          if (apiData.token) dbToken = apiData.token;
+          if (apiData.isNewUser) isNewUser = true;
+        }
+      }
+    // Ensure database verification succeeded - STRICTLY disallow login without database
+    if (!dbUser) {
+      console.error('[Google Auth] REJECTED: User could not be saved or verified in MongoDB database.');
+      return sendResponse(res, 403, `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>Database Error - Sign In Rejected</title>
+          <style>
+            body { background: #090d16; color: #f8fafc; font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; }
+            .card { background: #111827; border: 1px solid #ef4444; padding: 32px; border-radius: 16px; text-align: center; max-width: 380px; width: 100%; }
+            h2 { color: #f87171; margin-top: 0; font-size: 18px; }
+            p { color: #94a3b8; font-size: 13px; line-height: 1.5; }
+            .btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #ef4444; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h2>Database Required</h2>
+            <p>Login without database is not permitted. Account could not be verified in the database.</p>
+            <button class="btn" onclick="window.close()">Close Window</button>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    const HMAC_SECRET = 'LM_SEC_HMAC_V2_87086_RK_2026_X99F';
+    const finalEmail = (dbUser ? dbUser.email : userData.email).toLowerCase().trim();
+    const finalPlanUpper = (dbUser && dbUser.plan ? (dbUser.plan === 'free' ? 'FREE' : 'PRO') : 'PRO').toUpperCase();
+    const loginAt = Date.now();
+    const sig = crypto.createHmac('sha256', HMAC_SECRET)
+      .update(`${finalEmail}:${finalPlanUpper}:${loginAt}`)
+      .digest('hex');
+
     const authPayload = {
       isLoggedIn: true,
-      email: userData.email,
-      name: userData.name || userData.given_name || 'Google User',
-      avatar: userData.picture || '',
-      plan: 'Pro',
-      token: tokenData.id_token || tokenData.access_token,
-      loginAt: Date.now(),
+      email: finalEmail,
+      name: dbUser ? dbUser.name : (userData.name || userData.given_name || 'Google User'),
+      avatar: (dbUser && dbUser.avatar) ? dbUser.avatar : (userData.picture || ''),
+      plan: finalPlanUpper === 'PRO' ? 'Pro' : 'Free Tier',
+      token: dbToken || tokenData.id_token || tokenData.access_token || '',
+      loginAt,
+      sig,
+      isNewUser,
     };
 
     const payloadJson = JSON.stringify(authPayload);
@@ -245,13 +440,13 @@ module.exports = async (req, res) => {
     ${userData.picture ? `<img class="avatar" src="${userData.picture}" alt="Avatar" referrerpolicy="no-referrer">` : ''}
     <h2>Welcome, ${userData.name || 'User'}!</h2>
     <p class="email">${userData.email || ''}</p>
-    <div class="badge">PRO ACCOUNT ACTIVATED</div>
+    <div class="badge">✓ Connected</div>
 
-    <button id="open-btn" class="btn-primary" onclick="openApp()">Open Locco Mirror Software</button>
-    <div id="status-msg" class="status-msg">Opening desktop software...</div>
+    <button id="open-btn" class="btn-primary" onclick="openApp()">Open loccoMirror App</button>
+    <div id="status-msg" class="status-msg">Opening app...</div>
 
-    <div style="margin-top: 22px; padding-top: 16px; border-top: 1px solid #1f2937;">
-      <p style="margin: 0 0 10px; font-size: 12px; color: #94a3b8;">You can now safely close this browser window.</p>
+    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #1f2937;">
+      <p style="margin: 0 0 10px; font-size: 12px; color: #94a3b8;">You can close this tab now.</p>
       <button onclick="window.close()" style="background: #1f2937; color: #cbd5e1; border: 1px solid #374151; padding: 7px 18px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 500;">Close Tab</button>
     </div>
   </div>
@@ -295,7 +490,7 @@ module.exports = async (req, res) => {
         }).then(function(res) {
           if (res.ok) {
             const el = document.getElementById('status-msg');
-            if (el) el.innerText = 'Connected! Desktop software is now authenticated.';
+            if (el) el.innerText = 'Connected! Your app is ready.';
           }
         }).catch(function() {
           // Fallback image beacon
@@ -314,7 +509,7 @@ module.exports = async (req, res) => {
         window.location.href = 'loccomirror://auth?data=' + encodeURIComponent(b64Url);
       } catch (e) {}
       const el = document.getElementById('status-msg');
-      if (el) el.innerText = 'Redirecting to Locco Mirror software...';
+      if (el) el.innerText = 'Opening loccoMirror app...';
     }
 
     // Auto-launch immediately on page load
@@ -325,11 +520,9 @@ module.exports = async (req, res) => {
 </body>
 </html>`;
 
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(html);
+    return sendResponse(res, 200, html);
   } catch (err) {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(500).send(`
+    return sendResponse(res, 500, `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -380,4 +573,4 @@ module.exports = async (req, res) => {
       </html>
     `);
   }
-};
+}
