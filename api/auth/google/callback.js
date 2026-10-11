@@ -258,6 +258,10 @@ export default async function handler(req, res) {
           if (apiData.isNewUser) isNewUser = true;
         }
       }
+    } catch (err) {
+      console.warn('[Backend Sync Error]:', err.message);
+    }
+
     // Ensure database verification succeeded - STRICTLY disallow login without database
     if (!dbUser) {
       console.error('[Google Auth] REJECTED: User could not be saved or verified in MongoDB database.');
